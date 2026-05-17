@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthOS | Personal Financial Dashboard</title>
+    <meta name="description" content="Premium financial planning and wealth reverse-engineering system.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">⬡</div>
+                <span>WealthOS</span>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="#" class="active" data-tab="networth"><i data-lucide="layout-dashboard"></i> Net Worth</a>
+                <a href="#" data-tab="portfolio"><i data-lucide="pie-chart"></i> Portfolio</a>
+                <a href="#" data-tab="loan"><i data-lucide="home"></i> Home Loan</a>
+                <a href="#" data-tab="tax"><i data-lucide="percent"></i> Tax Planning</a>
+                <a href="#" data-tab="goals"><i data-lucide="target"></i> Goals</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">SS</div>
+                    <div class="user-info">
+                        <span class="user-name">Santanu Sarker</span>
+                        <span class="user-plan">PAN: AZCPS7886D</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="greeting">
+                    <h1>WealthOS</h1>
+                    <p id="subtext-context">Santanu Sarker · IndMoney: WY55249RNY</p>
+                </div>
+                <div class="header-actions">
+                    <div id="cors-notice" class="badge badge-warning" style="display: none; margin-right: 15px; text-transform: none;">
+                        CORS offline mode active
+                    </div>
+                    <button class="btn btn-primary" id="btn-refresh"><i data-lucide="refresh-cw"></i> Refresh Prices</button>
+                    <span class="last-updated" id="last-updated-time">Buy prices loaded</span>
+                </div>
+            </header>
+
+            <!-- ── TAB: NET WORTH ── -->
+            <section id="networth-tab" class="tab-content active">
+                <div class="dashboard-grid grid-4">
+                    <div class="kpi-card glass accent-gold">
+                        <div class="kpi-header">
+                            <span class="label">Net Worth</span>
+                            <i data-lucide="wallet"></i>
+                        </div>
+                        <h2 id="networth-val">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">Portfolio − Loan</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-teal">
+                        <div class="kpi-header">
+                            <span class="label">Portfolio Value</span>
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <h2 id="portfolio-val">₹ 0</h2>
+                        <div class="kpi-footer" id="portfolio-pnl-wrapper">
+                            <span id="portfolio-pnl">₹ 0 (+0.00%) P&L</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-coral">
+                        <div class="kpi-header">
+                            <span class="label">Loan Outstanding</span>
+                            <i data-lucide="percent"></i>
+                        </div>
+                        <h2 id="loan-outstanding-val">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">IDBI · Ankhi Sarker</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-blue">
+                        <div class="kpi-header">
+                            <span class="label">Monthly EMI</span>
+                            <i data-lucide="calendar"></i>
+                        </div>
+                        <h2 id="loan-emi-val">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label" id="emi-portfolio-ratio">≈0% of portfolio/yr</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid grid-2" style="margin-top: 1.5rem;">
+                    <!-- Left: Asset Class Breakdown Chart -->
+                    <div class="card glass">
+                        <h3 class="section-title">Asset Class Breakdown</h3>
+                        <div class="chart-container" style="height: 220px; position: relative;">
+                            <canvas id="assetClassChart"></canvas>
+                        </div>
+                        <div class="asset-legend" id="asset-legend-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Balance Sheet Snapshot -->
+                    <div class="card glass">
+                        <h3 class="section-title">Balance Sheet Snapshot</h3>
+                        <div class="balance-sheet-snapshot" id="balance-sheet-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Insurance Card -->
+                <div class="card glass" style="margin-top: 1.5rem;">
+                    <h3 class="section-title">Insurance Coverage</h3>
+                    <div class="insurance-grid">
+                        <div class="insurance-block">
+                            <div class="ins-label">Cancer & Blood</div>
+                            <div class="ins-val">₹10L</div>
+                            <div class="ins-status"><span class="indicator active"></span> ACTIVE</div>
+                        </div>
+                        <div class="insurance-block">
+                            <div class="ins-label">Heart & Vessels</div>
+                            <div class="ins-val">₹10L</div>
+                            <div class="ins-status"><span class="indicator active"></span> ACTIVE</div>
+                        </div>
+                        <div class="insurance-block">
+                            <div class="ins-label">Major Organs</div>
+                            <div class="ins-val">₹10L</div>
+                            <div class="ins-status"><span class="indicator active"></span> ACTIVE</div>
+                        </div>
+                        <div class="insurance-block">
+                            <div class="ins-label">Nervous System</div>
+                            <div class="ins-val">₹10L</div>
+                            <div class="ins-status"><span class="indicator active"></span> ACTIVE</div>
+                        </div>
+                        <div class="insurance-block">
+                            <div class="ins-label">Other Illness</div>
+                            <div class="ins-val">₹10L</div>
+                            <div class="ins-status"><span class="indicator active"></span> ACTIVE</div>
+                        </div>
+                    </div>
+                    <div class="insurance-footer">
+                        <span>ICICI Lombard Criti Shield Plus · Policy 4191/399655686/00/000</span>
+                        <span>Premium ₹11,108/yr · Expires 07 Jul 2026</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: PORTFOLIO ── -->
+            <section id="portfolio-tab" class="tab-content">
+                <div class="dashboard-grid grid-4">
+                    <div class="kpi-card glass accent-teal">
+                        <div class="kpi-header">
+                            <span class="label">Invested</span>
+                            <i data-lucide="credit-card"></i>
+                        </div>
+                        <h2 id="port-invested-val">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">Holdings Cost Basis</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-blue">
+                        <div class="kpi-header">
+                            <span class="label">Current Value</span>
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <h2 id="port-current-val">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label" id="port-status-label">Local prices</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass" id="port-pnl-card">
+                        <div class="kpi-header">
+                            <span class="label">Total P&L</span>
+                            <i data-lucide="bar-chart-2"></i>
+                        </div>
+                        <h2 id="port-pnl-val">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label" id="port-pnl-pct">+0.00%</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-purple">
+                        <div class="kpi-header">
+                            <span class="label">Holdings</span>
+                            <i data-lucide="layers"></i>
+                        </div>
+                        <h2 id="port-holdings-count">33</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">stocks & ETFs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid grid-2" style="margin-top: 1.5rem;">
+                    <!-- Left: Sector Allocation Chart -->
+                    <div class="card glass">
+                        <h3 class="section-title">Sector Allocation</h3>
+                        <div class="chart-container" style="height: 220px; position: relative;">
+                            <canvas id="sectorChart"></canvas>
+                        </div>
+                        <div class="sector-legend" id="sector-legend-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Top 10 Holdings -->
+                    <div class="card glass">
+                        <h3 class="section-title">Top 10 Holdings by Value</h3>
+                        <div class="top-holdings-list" id="top-holdings-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: All Holdings Table -->
+                <div class="card glass" style="margin-top: 1.5rem;">
+                    <div class="table-header">
+                        <h3 class="section-title">All Holdings</h3>
+                        <div class="table-filters">
+                            <input type="text" id="search-holdings" placeholder="Search holdings..." class="search-input">
+                            <select id="filter-sector" class="select-filter">
+                                <option value="all">All Sectors</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="holdings-table" id="holdings-table-el">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>Sector</th>
+                                    <th class="text-right">Qty</th>
+                                    <th class="text-right">Buy Price</th>
+                                    <th class="text-right">Current Price</th>
+                                    <th class="text-right">Invested</th>
+                                    <th class="text-right">Value</th>
+                                    <th class="text-right">P&L</th>
+                                    <th class="text-right">P&L %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="holdings-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: HOME LOAN ── -->
+            <section id="loan-tab" class="tab-content">
+                <div class="dashboard-grid grid-4">
+                    <div class="kpi-card glass accent-coral">
+                        <div class="kpi-header">
+                            <span class="label">Outstanding (Aug '26)</span>
+                            <i data-lucide="alert-circle"></i>
+                        </div>
+                        <h2 id="loan-outstanding-val2">₹ 25,38,536</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">A/C 0212675100001571</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-blue">
+                        <div class="kpi-header">
+                            <span class="label">Monthly EMI</span>
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <h2>₹ 32,829</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">ECS auto-debit</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-gold">
+                        <div class="kpi-header">
+                            <span class="label">Est. Payoff</span>
+                            <i data-lucide="calendar"></i>
+                        </div>
+                        <h2 id="loan-payoff-date">Aug 2031</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label" id="loan-payoff-months">60 months remaining</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-teal">
+                        <div class="kpi-header">
+                            <span class="label">Total Prepaid</span>
+                            <i data-lucide="check-circle-2"></i>
+                        </div>
+                        <h2>₹ 5,00,000</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">₹3L Jul'24 + ₹2L Aug'25</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid grid-2" style="margin-top: 1.5rem;">
+                    <!-- Left: Prepayment Simulator -->
+                    <div class="card glass">
+                        <h3 class="section-title">Prepayment Simulator</h3>
+                        <div class="simulator-controls">
+                            <div class="control-group">
+                                <div class="control-label">
+                                    <span>Additional Annual Prepayment</span>
+                                    <span class="control-value" id="prepay-slider-val">₹ 0 / yr</span>
+                                </div>
+                                <input type="range" id="input-prepayment" min="0" max="300000" step="10000" value="0" class="range-slider">
+                                <div class="slider-labels">
+                                    <span>₹0</span>
+                                    <span>₹3L</span>
+                                </div>
+                            </div>
+
+                            <div class="control-group" style="margin-top: 1.5rem;">
+                                <div class="control-label">
+                                    <span>Interest Rate</span>
+                                    <span class="control-value" id="rate-slider-val">9.5%</span>
+                                </div>
+                                <input type="range" id="input-loan-rate" min="8" max="12" step="0.25" value="9.5" class="range-slider">
+                                <div class="slider-labels">
+                                    <span>8%</span>
+                                    <span>12%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="simulator-results" style="margin-top: 1.5rem;">
+                            <div class="sim-row">
+                                <span class="sim-label">New Payoff Estimate</span>
+                                <span class="sim-value text-teal" id="sim-payoff-date">Aug 2031</span>
+                            </div>
+                            <div class="sim-row" style="margin-top: 0.5rem;">
+                                <span class="sim-label">Total Interest Saved</span>
+                                <span class="sim-value text-gold" id="sim-interest-saved">₹ 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: stacked 12-month EMI breakdown -->
+                    <div class="card glass">
+                        <h3 class="section-title">12-Month EMI Breakdown</h3>
+                        <div class="chart-container" style="height: 220px; position: relative;">
+                            <canvas id="emiBreakdownChart"></canvas>
+                        </div>
+                        <div class="emi-chart-legend" style="display: flex; gap: 15px; margin-top: 10px; font-size: 11px; justify-content: center;">
+                            <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; background-color: var(--accent-coral); border-radius: 2px;"></div><span class="text-muted">Interest</span></div>
+                            <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; background-color: var(--accent-teal); border-radius: 2px;"></div><span class="text-muted">Principal</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Area chart of balance over time -->
+                <div class="card glass" style="margin-top: 1.5rem;">
+                    <h3 class="section-title">Loan Balance Over Time</h3>
+                    <div class="chart-container" style="height: 220px; position: relative;">
+                        <canvas id="loanBalanceChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: TAX PLANNING ── -->
+            <section id="tax-tab" class="tab-content">
+                <div class="tax-year-switcher">
+                    <button class="switcher-btn active" id="fy-switcher-fy26" data-fy="fy26">FY 2025–26 (Provisional)</button>
+                    <button class="switcher-btn" id="fy-switcher-fy25" data-fy="fy25">FY 2024–25 (Actual)</button>
+                </div>
+
+                <div class="dashboard-grid grid-3" style="margin-top: 1.5rem;">
+                    <div class="kpi-card glass accent-blue">
+                        <div class="kpi-header">
+                            <span class="label">Section 24(b) — Home Loan Interest</span>
+                            <i data-lucide="percent"></i>
+                        </div>
+                        <h2 id="tax-sec24b">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label" id="tax-sec24b-sub">~ Provisional</span>
+                        </div>
+                        <div class="tax-saving-badge">
+                            Tax saved @30%: <span class="text-blue" id="tax-sec24b-save">₹ 0</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-teal">
+                        <div class="kpi-header">
+                            <span class="label">Section 80C — Loan Principal</span>
+                            <i data-lucide="check-square"></i>
+                        </div>
+                        <h2 id="tax-sec80c">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label" id="tax-sec80c-sub">~ Provisional (₹1.5L max)</span>
+                        </div>
+                        <div class="tax-saving-badge">
+                            Eligible: <span class="text-teal" id="tax-sec80c-eligible">₹ 0</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass accent-gold">
+                        <div class="kpi-header">
+                            <span class="label">Section 80D — Health Insurance</span>
+                            <i data-lucide="heart"></i>
+                        </div>
+                        <h2 id="tax-sec80d">₹ 0</h2>
+                        <div class="kpi-footer">
+                            <span class="sub-label">ICICI Lombard Criti Shield</span>
+                        </div>
+                        <div class="tax-saving-badge">
+                            Tax saved @30%: <span class="text-gold" id="tax-sec80d-save">₹ 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax summary card -->
+                <div class="card glass" style="margin-top: 1.5rem;">
+                    <h3 class="section-title" id="tax-summary-title">Total Tax Deduction Summary — FY 2025–26</h3>
+                    <div class="tax-deduction-list" id="tax-deductions-container">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <div class="tax-grand-total" style="margin-top: 1.5rem;">
+                        <div class="total-info">
+                            <span class="total-title">Total Deductions</span>
+                            <span class="total-sub">Assuming 30% tax bracket</span>
+                        </div>
+                        <div class="total-numbers">
+                            <h2 id="tax-total-deductions">₹ 0</h2>
+                            <span class="total-savings text-teal" id="tax-total-savings">Est. Tax Saving: ₹ 0</span>
+                        </div>
+                    </div>
+
+                    <div class="tax-warning-note" style="margin-top: 1.5rem; font-size: 11px; color: var(--text-muted); font-style: italic;">
+                        ⚠ Consult a CA for final tax computation. 80C includes other instruments (PPF, ELSS, etc.) up to ₹1.5L total. Provisional FY26 figures subject to change.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: GOALS ── -->
+            <section id="goals-tab" class="tab-content">
+                <div class="card glass">
+                    <h3 class="section-title">Portfolio Growth Projections</h3>
+                    <p class="section-description text-muted" id="goals-projection-subtext" style="font-size: 12px; margin-bottom: 15px;">
+                        Starting from current value of ₹ 0 (₹1,98,581 invested)
+                    </p>
+                    <div class="chart-container" style="height: 300px; position: relative;">
+                        <canvas id="growthProjectionChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid grid-2" style="margin-top: 1.5rem;">
+                    <!-- Left: Wealth Milestones -->
+                    <div class="card glass">
+                        <h3 class="section-title">10-Year Wealth Milestones</h3>
+                        <div class="milestones-list" id="milestones-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: What's Missing -->
+                    <div class="card glass">
+                        <h3 class="section-title">What's Missing from Your Plan</h3>
+                        <div class="missing-list">
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-1" class="missing-checkbox">
+                                <label for="missing-1">Monthly income / salary (for savings rate)</label>
+                            </div>
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-2" class="missing-checkbox">
+                                <label for="missing-2">EPF / PPF / NPS balances</label>
+                            </div>
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-3" class="missing-checkbox">
+                                <label for="missing-3">Spouse's income & investments</label>
+                            </div>
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-4" class="missing-checkbox">
+                                <label for="missing-4">Term life insurance</label>
+                            </div>
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-5" class="missing-checkbox">
+                                <label for="missing-5">Children's education fund target</label>
+                            </div>
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-6" class="missing-checkbox">
+                                <label for="missing-6">Retirement corpus goal & target age</label>
+                            </div>
+                            <div class="missing-item">
+                                <input type="checkbox" id="missing-7" class="missing-checkbox">
+                                <label for="missing-7">Emergency fund (3–6 months expenses)</label>
+                            </div>
+                        </div>
+                        <p class="missing-footer text-muted" style="font-size: 11px; margin-top: 15px;">
+                            Share these details to build a complete financial plan.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="app-footer">
+        <span>WealthOS · Personal Financial Dashboard · Santanu Sarker</span>
+        <span>Data: IndMoney holdings 31-Mar-2026 · IDBI Loan Aug-2026 · ICICI Lombard Jul-2025</span>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
